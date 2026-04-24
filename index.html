@@ -1,1 +1,1145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Wearable Multi-Parameter Physiological Monitoring System</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <style>
+    /* ── Reset & Base ───────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --rose:    #f9c6cc;
+      --peach:   #fdd9b5;
+      --butter:  #fef3c0;
+      --mint:    #c7edd8;
+      --sky:     #c2dff6;
+      --lavender:#ddd6fe;
+      --lilac:   #e9d5ff;
+      --cream:   #fdf8f2;
+      --charcoal:#2d2926;
+      --muted:   #7a6e68;
+      --border:  rgba(45,41,38,0.10);
+      --r: 1.5rem;
+    }
+    html { scroll-behavior: smooth; }
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background: var(--cream);
+      color: var(--charcoal);
+      overflow-x: hidden;
+    }
 
+    /* ── Noise overlay ──────────────────────────────────── */
+    body::before {
+      content: '';
+      position: fixed; inset: 0; z-index: 0; pointer-events: none;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");
+      background-size: 200px;
+      opacity: 0.4;
+    }
+
+    /* ── Floating blobs ─────────────────────────────────── */
+    .blob {
+      position: fixed; border-radius: 50%; filter: blur(80px);
+      opacity: 0.35; pointer-events: none; z-index: 0;
+      animation: blobDrift 18s ease-in-out infinite alternate;
+    }
+    .blob-1 { width: 420px; height: 420px; background: var(--rose);    top: -100px; left: -100px; animation-delay: 0s; }
+    .blob-2 { width: 360px; height: 360px; background: var(--sky);     bottom: 10%; right: -80px; animation-delay: -6s; }
+    .blob-3 { width: 300px; height: 300px; background: var(--lavender);top: 40%; left: 30%; animation-delay: -12s; }
+
+    @keyframes blobDrift {
+      from { transform: translate(0, 0) scale(1); }
+      to   { transform: translate(30px, 40px) scale(1.08); }
+    }
+
+    /* ── Layout ─────────────────────────────────────────── */
+    section { position: relative; z-index: 1; }
+    .container { max-width: 1100px; margin: 0 auto; padding: 0 2rem; }
+
+    /* ── Nav ────────────────────────────────────────────── */
+    nav {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+      padding: 1.2rem 2rem;
+      display: flex; align-items: center; justify-content: space-between;
+      backdrop-filter: blur(18px);
+      background: rgba(253,248,242,0.75);
+      border-bottom: 1px solid var(--border);
+      animation: fadeDown 0.8s ease both;
+    }
+    @keyframes fadeDown { from { opacity:0; transform:translateY(-20px); } to { opacity:1; transform:translateY(0); } }
+
+    .nav-logo {
+      font-family: 'DM Serif Display', serif;
+      font-size: 1.3rem; color: var(--charcoal);
+      display: flex; align-items: center; gap: 0.5rem;
+    }
+    .nav-logo .pulse-dot {
+      width: 10px; height: 10px; border-radius: 50%;
+      background: var(--rose); border: 2px solid #e8a0a8;
+      animation: pulseDot 2s ease-in-out infinite;
+    }
+    @keyframes pulseDot {
+      0%,100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(249,198,204,0.7); }
+      50%      { transform: scale(1.2); box-shadow: 0 0 0 8px rgba(249,198,204,0); }
+    }
+    .nav-links { display: flex; gap: 2rem; list-style: none; }
+    .nav-links a {
+      text-decoration: none; color: var(--muted);
+      font-size: 0.9rem; font-weight: 500;
+      transition: color 0.2s;
+    }
+    .nav-links a:hover { color: var(--charcoal); }
+
+    /* ── Hero ───────────────────────────────────────────── */
+    #hero {
+      min-height: 100vh;
+      display: flex; align-items: center;
+      padding: 7rem 2rem 4rem;
+    }
+    .hero-inner {
+      max-width: 1100px; margin: 0 auto;
+      display: grid; grid-template-columns: 1fr 1fr;
+      gap: 4rem; align-items: center;
+    }
+    .hero-tag {
+      display: inline-flex; align-items: center; gap: 0.5rem;
+      background: var(--mint); color: #2d7a52;
+      font-size: 0.78rem; font-weight: 500; letter-spacing: 0.08em;
+      text-transform: uppercase; padding: 0.35rem 0.9rem;
+      border-radius: 99px; margin-bottom: 1.5rem;
+      animation: fadeUp 0.8s 0.2s ease both;
+    }
+    .hero-title {
+      font-family: 'DM Serif Display', serif;
+      font-size: clamp(2.8rem, 5vw, 4.2rem);
+      line-height: 1.1; margin-bottom: 1.5rem;
+      animation: fadeUp 0.8s 0.35s ease both;
+    }
+    .hero-title em { font-style: italic; color: #c75f6a; }
+    .hero-desc {
+      font-size: 1.05rem; color: var(--muted); line-height: 1.8;
+      max-width: 480px; margin-bottom: 2.5rem;
+      animation: fadeUp 0.8s 0.5s ease both;
+    }
+    .hero-ctas {
+      display: flex; gap: 1rem; flex-wrap: wrap;
+      animation: fadeUp 0.8s 0.65s ease both;
+    }
+    .btn {
+      display: inline-flex; align-items: center; gap: 0.5rem;
+      padding: 0.75rem 1.6rem; border-radius: 99px;
+      font-size: 0.9rem; font-weight: 500; cursor: pointer;
+      text-decoration: none; transition: transform 0.2s, box-shadow 0.2s;
+      border: 1.5px solid transparent;
+    }
+    .btn:hover { transform: translateY(-2px); }
+    .btn-primary {
+      background: var(--charcoal); color: white;
+      box-shadow: 0 4px 20px rgba(45,41,38,0.2);
+    }
+    .btn-primary:hover { box-shadow: 0 8px 28px rgba(45,41,38,0.3); }
+    .btn-secondary {
+      background: transparent; color: var(--charcoal);
+      border-color: var(--border);
+    }
+    .btn-secondary:hover { background: white; }
+
+    @keyframes fadeUp { from { opacity:0; transform:translateY(28px); } to { opacity:1; transform:translateY(0); } }
+
+    /* ── OLED Device ────────────────────────────────────── */
+    .device-wrap {
+      display: flex; justify-content: center; align-items: center;
+      animation: fadeUp 0.8s 0.4s ease both;
+    }
+    .device {
+      position: relative;
+      background: #1a1a2e;
+      border-radius: 28px;
+      padding: 20px;
+      box-shadow:
+        0 0 0 3px #333,
+        0 30px 80px rgba(0,0,0,0.3),
+        0 0 60px rgba(199,95,106,0.15);
+      width: 280px;
+      animation: deviceFloat 6s ease-in-out infinite;
+    }
+    @keyframes deviceFloat {
+      0%,100% { transform: translateY(0) rotate(-1deg); }
+      50%      { transform: translateY(-14px) rotate(1deg); }
+    }
+    .oled-screen {
+      background: #000;
+      border-radius: 10px;
+      width: 100%;
+      aspect-ratio: 2/1;
+      overflow: hidden;
+      position: relative;
+    }
+    /* Yellow zone */
+    .oled-yellow {
+      background: transparent;
+      height: 28%;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0 10px;
+      border-bottom: 1px solid rgba(255,255,200,0.15);
+    }
+    .oled-title {
+      font-family: 'DM Mono', monospace;
+      font-size: 0.52rem; color: #fffba0; letter-spacing: 0.05em;
+    }
+    /* animated ECG dots */
+    .oled-dots { display: flex; gap: 3px; align-items: center; }
+    .oled-dot {
+      width: 5px; height: 5px; border-radius: 50%;
+      border: 1px solid rgba(255,255,200,0.5);
+    }
+    .oled-dot.active { background: #fffba0; border-color: #fffba0; }
+
+    /* Blue zone */
+    .oled-blue {
+      padding: 6px 10px;
+      display: grid; grid-template-columns: 1fr 1fr;
+      gap: 4px;
+    }
+    .oled-metric { }
+    .oled-label {
+      font-family: 'DM Mono', monospace;
+      font-size: 0.42rem; color: rgba(150,200,255,0.7);
+      letter-spacing: 0.05em;
+    }
+    .oled-value {
+      font-family: 'DM Mono', monospace;
+      font-size: 0.85rem; color: #a8d4ff; font-weight: 500;
+      line-height: 1.1;
+    }
+    .oled-value span { font-size: 0.45rem; color: rgba(150,200,255,0.6); }
+    .oled-divider-h {
+      grid-column: 1/-1;
+      height: 1px; background: rgba(150,200,255,0.15);
+      margin: 2px 0;
+    }
+    /* Animated number counting */
+    .oled-value.animating { animation: numFlicker 3s ease-in-out infinite; }
+    @keyframes numFlicker {
+      0%,90%,100% { opacity: 1; }
+      95% { opacity: 0.6; }
+    }
+
+    /* ── Stats strip ────────────────────────────────────── */
+    .stats-strip {
+      background: white;
+      border-top: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+      padding: 2.5rem 2rem;
+    }
+    .stats-grid {
+      max-width: 1100px; margin: 0 auto;
+      display: grid; grid-template-columns: repeat(4, 1fr);
+      gap: 2rem; text-align: center;
+    }
+    .stat-num {
+      font-family: 'DM Serif Display', serif;
+      font-size: 2.4rem; color: var(--charcoal);
+    }
+    .stat-label { font-size: 0.85rem; color: var(--muted); margin-top: 0.2rem; }
+
+    /* ── Sensors section ────────────────────────────────── */
+    #sensors { padding: 6rem 2rem; }
+    .section-tag {
+      display: inline-block;
+      font-size: 0.75rem; font-weight: 500; letter-spacing: 0.1em;
+      text-transform: uppercase; color: var(--muted);
+      margin-bottom: 1rem;
+    }
+    .section-title {
+      font-family: 'DM Serif Display', serif;
+      font-size: clamp(2rem, 4vw, 3rem);
+      margin-bottom: 1rem; line-height: 1.15;
+    }
+    .section-sub {
+      color: var(--muted); max-width: 540px;
+      font-size: 1rem; line-height: 1.75; margin-bottom: 3.5rem;
+    }
+
+    .sensors-grid {
+      display: grid; grid-template-columns: repeat(2, 1fr);
+      gap: 1.5rem;
+    }
+    .sensor-card {
+      background: white;
+      border: 1px solid var(--border);
+      border-radius: var(--r);
+      padding: 2rem;
+      position: relative; overflow: hidden;
+      transition: transform 0.3s, box-shadow 0.3s;
+      opacity: 0; transform: translateY(30px);
+      animation: none;
+    }
+    .sensor-card.visible {
+      animation: fadeUp 0.6s ease forwards;
+    }
+    .sensor-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 12px 40px rgba(0,0,0,0.08);
+    }
+    .sensor-card::before {
+      content: ''; position: absolute;
+      top: 0; left: 0; right: 0; height: 4px;
+      border-radius: var(--r) var(--r) 0 0;
+    }
+    .sensor-card.rose::before    { background: linear-gradient(90deg, var(--rose), var(--peach)); }
+    .sensor-card.sky::before     { background: linear-gradient(90deg, var(--sky), var(--lavender)); }
+    .sensor-card.mint::before    { background: linear-gradient(90deg, var(--mint), var(--butter)); }
+    .sensor-card.lilac::before   { background: linear-gradient(90deg, var(--lilac), var(--rose)); }
+
+    .sensor-icon {
+      width: 52px; height: 52px; border-radius: 14px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.5rem; margin-bottom: 1.2rem;
+    }
+    .sensor-card.rose  .sensor-icon { background: var(--rose); }
+    .sensor-card.sky   .sensor-icon { background: var(--sky); }
+    .sensor-card.mint  .sensor-icon { background: var(--mint); }
+    .sensor-card.lilac .sensor-icon { background: var(--lilac); }
+
+    .sensor-name {
+      font-family: 'DM Serif Display', serif;
+      font-size: 1.3rem; margin-bottom: 0.4rem;
+    }
+    .sensor-model {
+      font-family: 'DM Mono', monospace;
+      font-size: 0.75rem; color: var(--muted);
+      background: #f5f0ea; padding: 0.2rem 0.6rem;
+      border-radius: 6px; display: inline-block; margin-bottom: 1rem;
+    }
+    .sensor-desc { font-size: 0.92rem; color: var(--muted); line-height: 1.7; }
+    .sensor-specs {
+      margin-top: 1.2rem; display: flex; flex-wrap: wrap; gap: 0.5rem;
+    }
+    .spec-pill {
+      font-size: 0.75rem; padding: 0.25rem 0.7rem;
+      border-radius: 99px; border: 1px solid var(--border);
+      color: var(--muted); background: #fafafa;
+    }
+
+    /* ── Architecture ───────────────────────────────────── */
+    #architecture { padding: 6rem 2rem; background: white; }
+    .arch-grid {
+      display: grid; grid-template-columns: 1fr 1fr;
+      gap: 4rem; align-items: center;
+    }
+    .arch-diagram {
+      position: relative;
+    }
+    .arch-node {
+      background: var(--cream);
+      border: 1.5px solid var(--border);
+      border-radius: 14px;
+      padding: 1rem 1.4rem;
+      display: flex; align-items: center; gap: 0.8rem;
+      margin-bottom: 1rem;
+      opacity: 0; transform: translateX(-20px);
+      transition: opacity 0.5s ease, transform 0.5s ease;
+    }
+    .arch-node.visible { opacity: 1; transform: translateX(0); }
+    .arch-node-icon {
+      width: 38px; height: 38px; border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.1rem; flex-shrink: 0;
+    }
+    .arch-node-label { font-weight: 500; font-size: 0.9rem; }
+    .arch-node-sub { font-size: 0.78rem; color: var(--muted); font-family: 'DM Mono', monospace; }
+    .arch-arrow {
+      text-align: center; color: var(--muted);
+      font-size: 1.2rem; margin: -0.4rem 0;
+      opacity: 0; animation: none;
+    }
+    .arch-arrow.visible { animation: arrowPulse 2s ease-in-out infinite; opacity: 1; }
+    @keyframes arrowPulse {
+      0%,100% { transform: translateY(0); }
+      50%      { transform: translateY(4px); }
+    }
+
+    .arch-info { }
+    .arch-info h3 {
+      font-family: 'DM Serif Display', serif;
+      font-size: 1.8rem; margin-bottom: 1rem;
+    }
+    .arch-features { list-style: none; margin-top: 1.5rem; }
+    .arch-features li {
+      display: flex; align-items: flex-start; gap: 0.8rem;
+      padding: 0.9rem 0; border-bottom: 1px solid var(--border);
+      font-size: 0.92rem; color: var(--muted); line-height: 1.6;
+    }
+    .arch-features li:last-child { border-bottom: none; }
+    .feat-dot {
+      width: 8px; height: 8px; border-radius: 50%;
+      flex-shrink: 0; margin-top: 0.35rem;
+    }
+
+    /* ── Screens showcase ───────────────────────────────── */
+    #screens { padding: 6rem 2rem; }
+    .screens-scroll {
+      display: flex; gap: 1.5rem; overflow-x: auto;
+      padding: 1rem 0 2rem;
+      scrollbar-width: thin; scrollbar-color: var(--border) transparent;
+    }
+    .screen-card {
+      flex-shrink: 0; width: 220px;
+      background: white; border: 1px solid var(--border);
+      border-radius: var(--r); overflow: hidden;
+      transition: transform 0.3s, box-shadow 0.3s;
+    }
+    .screen-card:hover {
+      transform: translateY(-6px) scale(1.02);
+      box-shadow: 0 16px 48px rgba(0,0,0,0.1);
+    }
+    .screen-preview {
+      background: #000; padding: 12px;
+      aspect-ratio: 2/1; position: relative; overflow: hidden;
+    }
+    .oled-mini {
+      font-family: 'DM Mono', monospace;
+      font-size: 0.4rem; color: white;
+      line-height: 1.6;
+    }
+    .oled-mini .y { color: #fffba0; border-bottom: 1px solid rgba(255,255,200,0.2); padding-bottom: 3px; margin-bottom: 3px; }
+    .oled-mini .b { color: #a8d4ff; }
+    .oled-mini .bm { color: rgba(168,212,255,0.55); font-size: 0.35rem; }
+    .oled-mini .big { font-size: 0.7rem; color: #a8d4ff; line-height: 1.2; }
+    .oled-mini .dim { color: rgba(168,212,255,0.4); }
+    .screen-info { padding: 1.2rem; }
+    .screen-info h4 { font-size: 0.95rem; margin-bottom: 0.3rem; }
+    .screen-info p { font-size: 0.8rem; color: var(--muted); line-height: 1.5; }
+
+    /* ── Code section ───────────────────────────────────── */
+    #code { padding: 6rem 2rem; background: white; }
+    .code-grid {
+      display: grid; grid-template-columns: 1fr 1fr;
+      gap: 3rem; align-items: start;
+    }
+    .code-block {
+      background: #1e1e2e;
+      border-radius: var(--r);
+      overflow: hidden;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.15);
+    }
+    .code-top {
+      background: #2a2a3e;
+      padding: 0.8rem 1.2rem;
+      display: flex; align-items: center; gap: 0.6rem;
+    }
+    .code-dot { width: 10px; height: 10px; border-radius: 50%; }
+    .code-dot:nth-child(1) { background: #ff5f57; }
+    .code-dot:nth-child(2) { background: #ffbd2e; }
+    .code-dot:nth-child(3) { background: #28c840; }
+    .code-filename {
+      font-family: 'DM Mono', monospace;
+      font-size: 0.75rem; color: rgba(255,255,255,0.4);
+      margin-left: 0.5rem;
+    }
+    .code-body {
+      padding: 1.5rem;
+      font-family: 'DM Mono', monospace;
+      font-size: 0.78rem; line-height: 1.9;
+      color: #cdd6f4; overflow-x: auto;
+    }
+    .c-comment { color: #6c7086; }
+    .c-keyword  { color: #cba6f7; }
+    .c-func     { color: #89b4fa; }
+    .c-string   { color: #a6e3a1; }
+    .c-num      { color: #fab387; }
+    .c-type     { color: #f38ba8; }
+
+    /* ── Libraries ──────────────────────────────────────── */
+    .libs-grid {
+      display: grid; grid-template-columns: repeat(3, 1fr);
+      gap: 1rem; margin-top: 2rem;
+    }
+    .lib-card {
+      background: var(--cream);
+      border: 1px solid var(--border);
+      border-radius: 12px; padding: 1rem;
+    }
+    .lib-name {
+      font-family: 'DM Mono', monospace;
+      font-size: 0.78rem; font-weight: 500; margin-bottom: 0.3rem;
+    }
+    .lib-author { font-size: 0.72rem; color: var(--muted); }
+
+    /* ── Team / About ────────────────────────────────────── */
+    #about { padding: 6rem 2rem; }
+    .about-grid {
+      display: grid; grid-template-columns: 1fr 1.4fr;
+      gap: 4rem; align-items: center;
+    }
+    .about-img-wrap {
+      position: relative;
+    }
+    .about-badge {
+      position: absolute; bottom: -1rem; right: -1rem;
+      background: var(--charcoal); color: white;
+      border-radius: 14px; padding: 1rem 1.3rem;
+      font-size: 0.8rem; line-height: 1.5;
+    }
+    .about-badge strong { display: block; font-size: 1.1rem; }
+    .about-placeholder {
+      background: linear-gradient(135deg, var(--rose), var(--lavender), var(--sky));
+      border-radius: var(--r); aspect-ratio: 4/3;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 5rem;
+    }
+    .about-text h3 {
+      font-family: 'DM Serif Display', serif;
+      font-size: 2rem; margin-bottom: 1rem;
+    }
+    .about-text p { color: var(--muted); line-height: 1.8; margin-bottom: 1rem; }
+    .about-chips { display: flex; flex-wrap: wrap; gap: 0.6rem; margin-top: 1.5rem; }
+    .chip {
+      font-size: 0.78rem; padding: 0.3rem 0.9rem;
+      border-radius: 99px; font-weight: 500;
+    }
+    .chip-rose   { background: var(--rose);    color: #8b3a42; }
+    .chip-sky    { background: var(--sky);     color: #1e5a8a; }
+    .chip-mint   { background: var(--mint);    color: #1e6644; }
+    .chip-butter { background: var(--butter);  color: #7a6010; }
+    .chip-lilac  { background: var(--lilac);   color: #5b3a8a; }
+
+    /* ── Footer ─────────────────────────────────────────── */
+    footer {
+      background: var(--charcoal); color: rgba(255,255,255,0.6);
+      padding: 3rem 2rem; text-align: center;
+    }
+    footer .footer-logo {
+      font-family: 'DM Serif Display', serif;
+      font-size: 1.5rem; color: white; margin-bottom: 0.8rem;
+      line-height: 1.2;
+    }
+    footer p { font-size: 0.85rem; line-height: 1.7; }
+    footer .footer-links {
+      display: flex; justify-content: center; gap: 2rem;
+      list-style: none; margin: 1.5rem 0;
+    }
+    footer .footer-links a {
+      color: rgba(255,255,255,0.5); text-decoration: none;
+      font-size: 0.85rem; transition: color 0.2s;
+    }
+    footer .footer-links a:hover { color: white; }
+
+    /* ── Scroll animations ──────────────────────────────── */
+    .reveal {
+      opacity: 0; transform: translateY(30px);
+      transition: opacity 0.7s ease, transform 0.7s ease;
+    }
+    .reveal.visible { opacity: 1; transform: translateY(0); }
+
+    /* ── Responsive ─────────────────────────────────────── */
+    @media (max-width: 768px) {
+      .hero-inner     { grid-template-columns: 1fr; }
+      .sensors-grid   { grid-template-columns: 1fr; }
+      .arch-grid      { grid-template-columns: 1fr; }
+      .code-grid      { grid-template-columns: 1fr; }
+      .about-grid     { grid-template-columns: 1fr; }
+      .stats-grid     { grid-template-columns: repeat(2,1fr); }
+      .libs-grid      { grid-template-columns: repeat(2,1fr); }
+      .device-wrap    { display: none; }
+      .nav-links      { display: none; }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="blob blob-1"></div>
+  <div class="blob blob-2"></div>
+  <div class="blob blob-3"></div>
+
+  <nav>
+    <div class="nav-logo">
+      <div class="pulse-dot"></div>
+      <span style="font-size: 1rem; line-height: 1.1;">Wearable Multi-Parameter<br>Physiological Monitoring System</span>
+    </div>
+    <ul class="nav-links">
+      <li><a href="#sensors">Sensors</a></li>
+      <li><a href="#architecture">Architecture</a></li>
+      <li><a href="#screens">Display</a></li>
+      <li><a href="#code">Code</a></li>
+      <li><a href="#about">About</a></li>
+    </ul>
+  </nav>
+
+  <section id="hero">
+    <div class="hero-inner">
+      <div class="hero-text">
+        <div class="hero-tag">
+          <span>🩺</span> Biomedical Instrumentation Project
+        </div>
+        <h1 class="hero-title">
+          A wearable that<br/><em>listens</em> to your body
+        </h1>
+        <p class="hero-desc">
+          The Wearable Multi-Parameter Physiological Monitoring System is a compact ESP32-C3 based health monitor that tracks SpO₂,
+          heart rate, body temperature, and fall detection — all displayed live
+          on a dual-colour OLED screen.
+        </p>
+        <div class="hero-ctas">
+          <a href="https://drive.google.com/file/d/1Doj5zGBzSshPtb2Sv9hFEVC3dira6lfg/view?usp=drivesdk" target="_blank" class="btn btn-primary">Explore the Build</a>
+          <a href="https://github.com/Abishek-Tiruvuru/wearable/tree/main" target="_blank" class="btn btn-secondary">View Code →</a>
+        </div>
+      </div>
+
+      <div class="device-wrap">
+        <div class="device">
+          <div class="oled-screen">
+            <div class="oled-yellow">
+              <div class="oled-title">VITALS MONITOR</div>
+              <div class="oled-dots" id="oledDots">
+                <div class="oled-dot active"></div>
+                <div class="oled-dot"></div>
+                <div class="oled-dot"></div>
+                <div class="oled-dot"></div>
+              </div>
+            </div>
+            <div class="oled-blue">
+              <div class="oled-metric">
+                <div class="oled-label">SpO2</div>
+                <div class="oled-value animating" id="spo2Val">98<span>%</span></div>
+              </div>
+              <div class="oled-metric">
+                <div class="oled-label">HEART RATE</div>
+                <div class="oled-value animating" id="hrVal">72<span>b</span></div>
+              </div>
+              <div class="oled-divider-h"></div>
+              <div class="oled-metric">
+                <div class="oled-label">TEMP</div>
+                <div class="oled-value animating" id="tempVal">36.8<span>C</span></div>
+              </div>
+              <div class="oled-metric">
+                <div class="oled-label">FALL</div>
+                <div class="oled-value" id="fallVal">Clear</div>
+              </div>
+            </div>
+          </div>
+          <div style="position:absolute;left:50%;transform:translateX(-50%);bottom:-28px;width:60px;height:12px;background:#222;border-radius:0 0 8px 8px;"></div>
+          <div style="position:absolute;left:50%;transform:translateX(-50%);top:-20px;width:60px;height:12px;background:#222;border-radius:8px 8px 0 0;"></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <div class="stats-strip">
+    <div class="stats-grid">
+      <div class="reveal">
+        <div class="stat-num">4</div>
+        <div class="stat-label">Sensors Integrated</div>
+      </div>
+      <div class="reveal">
+        <div class="stat-num">100Hz</div>
+        <div class="stat-label">MAX30102 Sample Rate</div>
+      </div>
+      <div class="reveal">
+        <div class="stat-num">12-bit</div>
+        <div class="stat-label">DS18B20 Resolution</div>
+      </div>
+      <div class="reveal">
+        <div class="stat-num">5</div>
+        <div class="stat-label">Live Display Screens</div>
+      </div>
+    </div>
+  </div>
+
+  <section id="sensors">
+    <div class="container">
+      <div class="reveal">
+        <div class="section-tag">Hardware</div>
+        <h2 class="section-title">Four sensors.<br/>One tiny board.</h2>
+        <p class="section-sub">
+          Every sensor was chosen for accuracy, I²C compatibility, and low power draw —
+          all running off the ESP32-C3's 3.3V rail.
+        </p>
+      </div>
+
+      <div class="sensors-grid">
+        <div class="sensor-card rose">
+          <div class="sensor-icon">❤️</div>
+          <div class="sensor-name">SpO₂ & Heart Rate</div>
+          <div class="sensor-model">MAX30102</div>
+          <p class="sensor-desc">
+            Red and infrared LEDs measure blood oxygen saturation and detect
+            heartbeats via photoplethysmography. Runs a 100-sample rolling buffer
+            with weighted averaging for stable readings.
+          </p>
+          <div class="sensor-specs">
+            <span class="spec-pill">I²C 0x57</span>
+            <span class="spec-pill">100Hz sample rate</span>
+            <span class="spec-pill">18-bit ADC</span>
+            <span class="spec-pill">16384 ADC range</span>
+          </div>
+        </div>
+
+        <div class="sensor-card sky">
+          <div class="sensor-icon">🌡️</div>
+          <div class="sensor-name">Body Temperature</div>
+          <div class="sensor-model">DS18B20</div>
+          <p class="sensor-desc">
+            1-Wire digital temperature sensor on GPIO 2 with a 4.7kΩ pull-up
+            resistor. Set to 12-bit resolution for 0.0625°C accuracy, reading
+            non-blocking every 2 seconds.
+          </p>
+          <div class="sensor-specs">
+            <span class="spec-pill">1-Wire GPIO 2</span>
+            <span class="spec-pill">12-bit resolution</span>
+            <span class="spec-pill">±0.5°C accuracy</span>
+            <span class="spec-pill">Non-blocking</span>
+          </div>
+        </div>
+
+        <div class="sensor-card mint">
+          <div class="sensor-icon">📐</div>
+          <div class="sensor-name">Fall Detection</div>
+          <div class="sensor-model">MPU6050</div>
+          <p class="sensor-desc">
+            6-axis IMU tracking acceleration and gyroscope data. A two-stage
+            algorithm detects impact spikes above 2.4g followed by post-impact
+            stillness to confirm a real fall, eliminating false positives.
+          </p>
+          <div class="sensor-specs">
+            <span class="spec-pill">I²C 0x68</span>
+            <span class="spec-pill">2.4g threshold</span>
+            <span class="spec-pill">Two-stage detection</span>
+            <span class="spec-pill">Auto-calibrates</span>
+          </div>
+        </div>
+
+        <div class="sensor-card lilac">
+          <div class="sensor-icon">🖥️</div>
+          <div class="sensor-name">OLED Display</div>
+          <div class="sensor-model">SSD1306 128×64</div>
+          <p class="sensor-desc">
+            Dual-colour display with a yellow top band (16px) for screen titles
+            and a blue main zone for live data. Five rotating screens with page
+            indicator dots and smooth animations.
+          </p>
+          <div class="sensor-specs">
+            <span class="spec-pill">I²C 0x3C</span>
+            <span class="spec-pill">128×64 px</span>
+            <span class="spec-pill">Yellow + Blue</span>
+            <span class="spec-pill">5 screens</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="architecture">
+    <div class="container">
+      <div class="arch-grid">
+        <div class="arch-diagram">
+          <div class="reveal section-tag" style="margin-bottom:1.5rem;">System Architecture</div>
+
+          <div class="arch-node rose" style="transition-delay:0.1s;">
+            <div class="arch-node-icon" style="background:var(--rose);">❤️</div>
+            <div>
+              <div class="arch-node-label">MAX30102</div>
+              <div class="arch-node-sub">I²C · SDA GPIO8 · SCL GPIO9</div>
+            </div>
+          </div>
+          <div class="arch-arrow">↓</div>
+          <div class="arch-node sky" style="transition-delay:0.2s;">
+            <div class="arch-node-icon" style="background:var(--sky);">🌡️</div>
+            <div>
+              <div class="arch-node-label">DS18B20</div>
+              <div class="arch-node-sub">1-Wire · GPIO2 · 4.7kΩ pull-up</div>
+            </div>
+          </div>
+          <div class="arch-arrow">↓</div>
+          <div class="arch-node mint" style="transition-delay:0.3s;">
+            <div class="arch-node-icon" style="background:var(--mint);">📐</div>
+            <div>
+              <div class="arch-node-label">MPU6050</div>
+              <div class="arch-node-sub">I²C · SDA GPIO8 · SCL GPIO9</div>
+            </div>
+          </div>
+          <div class="arch-arrow">↓</div>
+          <div class="arch-node" style="transition-delay:0.4s; background:var(--charcoal); color:white;">
+            <div class="arch-node-icon" style="background:rgba(255,255,255,0.15);">⚡</div>
+            <div>
+              <div class="arch-node-label" style="color:white;">ESP32-C3</div>
+              <div class="arch-node-sub" style="color:rgba(255,255,255,0.5);">RISC-V · 160MHz · 3.3V</div>
+            </div>
+          </div>
+          <div class="arch-arrow">↓</div>
+          <div class="arch-node lilac" style="transition-delay:0.5s;">
+            <div class="arch-node-icon" style="background:var(--lilac);">🖥️</div>
+            <div>
+              <div class="arch-node-label">SSD1306 OLED</div>
+              <div class="arch-node-sub">I²C 0x3C · 128×64 dual-colour</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="arch-info reveal">
+          <div class="section-tag">How it works</div>
+          <h3>Rolling buffer + weighted smoothing</h3>
+          <p class="section-sub" style="margin-bottom:0;">
+            The firmware collects 100 IR/Red samples per cycle, shifts out the
+            oldest 25 and fills 25 fresh ones on every loop — giving a new SpO₂
+            reading every ~1 second instead of every 4.
+          </p>
+          <ul class="arch-features">
+            <li>
+              <div class="feat-dot" style="background:var(--rose);"></div>
+              SpO₂ calculated with Maxim's open-source algorithm on the full 100-sample window for maximum accuracy
+            </li>
+            <li>
+              <div class="feat-dot" style="background:var(--sky);"></div>
+              Heart rate uses a 10-beat weighted average where recent beats carry more weight, then smoothed over 5 averages
+            </li>
+            <li>
+              <div class="feat-dot" style="background:var(--mint);"></div>
+              Perfusion Index (AC/DC ratio of IR signal) shown live — above 1% is reliable, above 2% is clinical grade
+            </li>
+            <li>
+              <div class="feat-dot" style="background:var(--lavender);"></div>
+              Two-stage fall: impact spike above 2.4g must be followed by stillness within 600ms to confirm
+            </li>
+            <li>
+              <div class="feat-dot" style="background:var(--peach);"></div>
+              DS18B20 reads non-blocking every 2s — conversion runs in background while display updates
+            </li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="screens">
+    <div class="container">
+      <div class="reveal">
+        <div class="section-tag">Display</div>
+        <h2 class="section-title">Five screens.<br/>Zero clutter.</h2>
+        <p class="section-sub">
+          Each screen uses the yellow zone for the title and blue zone for one
+          large value, one status line, and a progress bar. Page indicator dots
+          show which screen is active.
+        </p>
+      </div>
+
+      <div class="screens-scroll">
+
+        <div class="screen-card">
+          <div class="screen-preview">
+            <div class="oled-mini">
+              <div class="y">VITALS  ● ○ ○ ○ ○</div>
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:4px;">
+                <div><div class="bm">SpO2</div><div class="big">98<span class="dim">%</span></div></div>
+                <div><div class="bm">HR</div><div class="big">72<span class="dim">b</span></div></div>
+                <div style="grid-column:1/-1;border-top:1px solid rgba(168,212,255,0.2);margin:2px 0;"></div>
+                <div><div class="bm">Temp</div><div class="b">36.8 C</div></div>
+                <div><div class="bm">Fall</div><div class="b">Clear</div></div>
+              </div>
+            </div>
+          </div>
+          <div class="screen-info">
+            <h4>Vitals Dashboard</h4>
+            <p>All four readings at once in a clean 2×2 grid.</p>
+          </div>
+        </div>
+
+        <div class="screen-card">
+          <div class="screen-preview">
+            <div class="oled-mini">
+              <div class="y">Blood Oxygen  SpO2</div>
+              <div style="text-align:center;padding:4px 0;">
+                <div style="font-size:1.1rem;color:#a8d4ff;line-height:1;">98<span class="dim" style="font-size:0.5rem;">%</span></div>
+              </div>
+              <div class="b" style="font-size:0.35rem;border-top:1px solid rgba(168,212,255,0.2);padding-top:3px;margin-top:2px;">Excellent &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; PI:2.1%</div>
+            </div>
+          </div>
+          <div class="screen-info">
+            <h4>SpO₂ Detail</h4>
+            <p>Large reading, status, and perfusion index.</p>
+          </div>
+        </div>
+
+        <div class="screen-card">
+          <div class="screen-preview">
+            <div class="oled-mini">
+              <div class="y">Heart Rate</div>
+              <div style="display:flex;align-items:center;gap:6px;padding:4px 0;">
+                <div style="color:#f9c6cc;font-size:0.7rem;">♥</div>
+                <div style="font-size:1rem;color:#a8d4ff;line-height:1;">72<span class="dim" style="font-size:0.4rem;">bpm</span></div>
+              </div>
+              <div class="b">Normal</div>
+              <div class="dim" style="font-size:0.35rem;border-top:1px solid rgba(168,212,255,0.2);margin-top:3px;padding-top:2px;">Instant: 74 bpm</div>
+            </div>
+          </div>
+          <div class="screen-info">
+            <h4>Heart Rate Detail</h4>
+            <p>Pulsing heart icon and scrolling ECG line.</p>
+          </div>
+        </div>
+
+        <div class="screen-card">
+          <div class="screen-preview">
+            <div class="oled-mini">
+              <div class="y">Temperature</div>
+              <div style="display:flex;align-items:center;gap:6px;padding:4px 0;">
+                <div style="font-size:0.6rem;color:rgba(168,212,255,0.5);">▐</div>
+                <div style="font-size:1rem;color:#a8d4ff;line-height:1;">36.8<span class="dim" style="font-size:0.4rem;">C</span></div>
+              </div>
+              <div style="height:4px;background:rgba(168,212,255,0.15);border-radius:2px;margin:3px 0;"><div style="width:55%;height:100%;background:#a8d4ff;border-radius:2px;"></div></div>
+              <div class="b">Normal</div>
+            </div>
+          </div>
+          <div class="screen-info">
+            <h4>Temperature Detail</h4>
+            <p>Thermometer icon with animated fill bar.</p>
+          </div>
+        </div>
+
+        <div class="screen-card">
+          <div class="screen-preview">
+            <div class="oled-mini">
+              <div class="y">Fall Detection</div>
+              <div class="b" style="padding:3px 0;">Status: Monitoring</div>
+              <div class="b">Accel: 1.02 g</div>
+              <div style="height:4px;background:rgba(168,212,255,0.15);border-radius:2px;margin:3px 0;position:relative;"><div style="width:15%;height:100%;background:#a8d4ff;border-radius:2px;"></div><div style="position:absolute;top:-2px;left:70%;width:1px;height:8px;background:rgba(168,212,255,0.5);"></div></div>
+              <div class="dim" style="font-size:0.35rem;">Threshold: 2.4g</div>
+            </div>
+          </div>
+          <div class="screen-info">
+            <h4>Fall Status</h4>
+            <p>Live accel reading with threshold marker.</p>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <section id="code">
+    <div class="container">
+      <div class="reveal">
+        <div class="section-tag">Firmware</div>
+        <h2 class="section-title">Clean, documented<br/>Arduino code.</h2>
+        <p class="section-sub">
+          Written for Arduino IDE 2.x targeting the ESP32-C3. Six open-source
+          libraries handle the heavy lifting.
+        </p>
+      </div>
+
+      <div class="code-grid">
+        <div class="reveal">
+          <div class="code-block">
+            <div class="code-top">
+              <div class="code-dot"></div>
+              <div class="code-dot"></div>
+              <div class="code-dot"></div>
+              <span class="code-filename">wearable_health.ino</span>
+            </div>
+            <div class="code-body"><pre><span class="c-comment">// Rolling buffer — faster SpO2</span>
+<span class="c-keyword">for</span> (<span class="c-type">byte</span> i = SHIFT; i &lt; BUF; i++) {
+  redBuf[i-SHIFT] = redBuf[i];
+  irBuf[i-SHIFT]  = irBuf[i];
+}
+
+<span class="c-comment">// Weighted HR average</span>
+<span class="c-type">long</span> ws = <span class="c-num">0</span>, wt = <span class="c-num">0</span>;
+<span class="c-keyword">for</span> (<span class="c-type">byte</span> x=<span class="c-num">0</span>; x&lt;RATE_SIZE; x++) {
+  <span class="c-type">byte</span> w = x + <span class="c-num">1</span>;
+  ws += rates[...] * w;
+  wt += w;
+}
+beatAvg = ws / wt;
+
+<span class="c-comment">// Two-stage fall detection</span>
+<span class="c-keyword">if</span> (accelMag &gt; FALL_G) {
+  impactHit = <span class="c-keyword">true</span>;
+  impactMs  = <span class="c-func">millis</span>();
+}
+<span class="c-keyword">if</span> (impactHit && el&gt;<span class="c-num">200</span>
+    && stillness &lt; STILL_G) {
+  fallDetected = <span class="c-keyword">true</span>;
+}
+
+<span class="c-comment">// Perfusion Index</span>
+perfusion = (irAC / irDC) * <span class="c-num">100.0</span>;</pre>
+            </div>
+          </div>
+        </div>
+
+        <div class="reveal">
+          <h3 style="font-family:'DM Serif Display',serif;font-size:1.4rem;margin-bottom:1rem;">Libraries used</h3>
+          <div class="libs-grid">
+            <div class="lib-card">
+              <div class="lib-name">Adafruit SSD1306</div>
+              <div class="lib-author">Adafruit</div>
+            </div>
+            <div class="lib-card">
+              <div class="lib-name">Adafruit GFX</div>
+              <div class="lib-author">Adafruit</div>
+            </div>
+            <div class="lib-card">
+              <div class="lib-name">SparkFun MAX3010x</div>
+              <div class="lib-author">SparkFun</div>
+            </div>
+            <div class="lib-card">
+              <div class="lib-name">MPU6050_light</div>
+              <div class="lib-author">rfetick</div>
+            </div>
+            <div class="lib-card">
+              <div class="lib-name">OneWire</div>
+              <div class="lib-author">P. Stoffregen</div>
+            </div>
+            <div class="lib-card">
+              <div class="lib-name">DallasTemperature</div>
+              <div class="lib-author">Miles Burton</div>
+            </div>
+          </div>
+
+          <div style="margin-top:2rem;">
+            <h4 style="font-size:1rem;margin-bottom:0.8rem;">Pin configuration</h4>
+            <table style="width:100%;font-size:0.82rem;border-collapse:collapse;">
+              <tr style="border-bottom:1px solid var(--border);">
+                <td style="padding:0.5rem 0;color:var(--muted);">I²C SDA</td>
+                <td style="font-family:'DM Mono',monospace;padding:0.5rem 0;">GPIO 8</td>
+              </tr>
+              <tr style="border-bottom:1px solid var(--border);">
+                <td style="padding:0.5rem 0;color:var(--muted);">I²C SCL</td>
+                <td style="font-family:'DM Mono',monospace;padding:0.5rem 0;">GPIO 9</td>
+              </tr>
+              <tr style="border-bottom:1px solid var(--border);">
+                <td style="padding:0.5rem 0;color:var(--muted);">DS18B20 Data</td>
+                <td style="font-family:'DM Mono',monospace;padding:0.5rem 0;">GPIO 2 + 4.7kΩ</td>
+              </tr>
+              <tr>
+                <td style="padding:0.5rem 0;color:var(--muted);">Power</td>
+                <td style="font-family:'DM Mono',monospace;padding:0.5rem 0;">3.3V all sensors</td>
+              </tr>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="about">
+    <div class="container">
+      <div class="about-grid">
+        <div class="reveal">
+          <div class="about-placeholder">🩺</div>
+          <div class="about-badge">
+            <strong>Group 04</strong>
+            Biomedical Instrumentation
+          </div>
+        </div>
+        <div class="about-text reveal">
+          <div class="section-tag">About this project</div>
+          <h3>Built from scratch.<br/>Learned everything.</h3>
+          <p>
+            The Wearable Multi-Parameter Physiological Monitoring System started as a biomedical instrumentation college project —
+            an attempt to pack real clinical-grade sensor readings into a tiny
+            ESP32-C3 wearable that actually works.
+          </p>
+          <p>
+            The journey involved I²C scanning diagnostics, toolchain reinstalls,
+            iterative signal processing improvements, and hours of refining the
+            OLED display layout pixel by pixel for the dual-colour screen.
+          </p>
+          <p>
+            The result is a working prototype that reads SpO₂, heart rate,
+            temperature, and detects falls — all updating live on a 128×64 display
+            no bigger than a postage stamp.
+          </p>
+          
+          <div style="margin-top: 1.5rem; padding: 1.5rem; background: #fafafa; border: 1px solid var(--border); border-radius: 12px;">
+            <h4 style="font-family: 'DM Serif Display', serif; font-size: 1.2rem; margin-bottom: 0.8rem;">Team Members</h4>
+            <ul style="list-style: none; padding: 0; margin: 0; font-size: 0.9rem; line-height: 1.7;">
+              <li style="display: flex; justify-content: space-between; border-bottom: 1px solid var(--border); padding: 0.3rem 0;"><span>Rohini Chidambaram</span><span style="font-family: 'DM Mono', monospace; color: var(--muted);">RA2411060010005</span></li>
+              <li style="display: flex; justify-content: space-between; border-bottom: 1px solid var(--border); padding: 0.3rem 0;"><span>Dharshan Sivaprakasam</span><span style="font-family: 'DM Mono', monospace; color: var(--muted);">RA2411060010008</span></li>
+              <li style="display: flex; justify-content: space-between; border-bottom: 1px solid var(--border); padding: 0.3rem 0;"><span>Abishek Tiruvuru</span><span style="font-family: 'DM Mono', monospace; color: var(--muted);">RA2411060010012</span></li>
+              <li style="display: flex; justify-content: space-between; border-bottom: 1px solid var(--border); padding: 0.3rem 0;"><span>Vrishti Patil</span><span style="font-family: 'DM Mono', monospace; color: var(--muted);">RA2411060010013</span></li>
+              <li style="display: flex; justify-content: space-between; padding: 0.3rem 0;"><span>Abdul Kader</span><span style="font-family: 'DM Mono', monospace; color: var(--muted);">RA2411060010022</span></li>
+            </ul>
+          </div>
+
+          <div class="about-chips">
+            <span class="chip chip-rose">ESP32-C3</span>
+            <span class="chip chip-sky">Arduino IDE</span>
+            <span class="chip chip-mint">I²C Bus</span>
+            <span class="chip chip-butter">1-Wire</span>
+            <span class="chip chip-lilac">Signal Processing</span>
+            <span class="chip chip-rose">Biomedical</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    <div class="footer-logo">Wearable Multi-Parameter<br>Physiological Monitoring System</div>
+    <ul class="footer-links">
+      <li><a href="#hero">Home</a></li>
+      <li><a href="#sensors">Sensors</a></li>
+      <li><a href="#code">Code</a></li>
+      <li><a href="#about">About</a></li>
+    </ul>
+    <p>Biomedical Instrumentation Project · ESP32-C3 Wearable Health Monitor<br/>Built with Arduino, ❤️, and a lot of I²C debugging.</p>
+  </footer>
+
+  <script>
+    // ── OLED live values simulation ───────────────────────
+    const spo2El  = document.getElementById('spo2Val');
+    const hrEl    = document.getElementById('hrVal');
+    const tempEl  = document.getElementById('tempVal');
+    const fallEl  = document.getElementById('fallVal');
+    const dots    = document.querySelectorAll('.oled-dot');
+
+    let spo2Val = 98, hrVal = 72, tempVal = 36.8;
+    let dotIdx  = 0;
+
+    setInterval(() => {
+      spo2Val  = 95 + Math.floor(Math.random() * 5);
+      hrVal    = 68 + Math.floor(Math.random() * 14);
+      tempVal  = (36.5 + Math.random() * 0.8).toFixed(1);
+      spo2El.innerHTML  = spo2Val  + '<span>%</span>';
+      hrEl.innerHTML    = hrVal    + '<span>b</span>';
+      tempEl.innerHTML  = tempVal  + '<span>C</span>';
+    }, 3200);
+
+    // Rotate page dots
+    setInterval(() => {
+      dots.forEach(d => d.classList.remove('active'));
+      dotIdx = (dotIdx + 1) % dots.length;
+      dots[dotIdx].classList.add('active');
+    }, 5000);
+
+    // ── Scroll reveal ─────────────────────────────────────
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(e => {
+        if (e.isIntersecting) {
+          e.target.classList.add('visible');
+        }
+      });
+    }, { threshold: 0.12 });
+
+    document.querySelectorAll('.reveal, .sensor-card, .arch-node, .arch-arrow').forEach(el => {
+      observer.observe(el);
+    });
+
+    // Staggered sensor cards
+    document.querySelectorAll('.sensor-card').forEach((card, i) => {
+      card.style.animationDelay = (i * 0.12) + 's';
+    });
+
+    // Staggered arch nodes
+    document.querySelectorAll('.arch-node').forEach((node, i) => {
+      node.style.transitionDelay = (i * 0.12) + 's';
+    });
+  </script>
+</body>
+</html>
